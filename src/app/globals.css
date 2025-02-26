@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --app-bg: linear-gradient(135deg, #173d33 0%, #0f2822 100%);
+}
+
+html,
+body {
+  height: 100%;
+  background-image: var(--app-bg);
+  color: #ffffff;
+}
+
+/* Custom component styles */
+.citadel-card {
+  @apply bg-citadel-green bg-opacity-70 backdrop-blur-sm rounded-xl border border-citadel-green-light shadow-lg;
+}
+
+.citadel-input {
+  @apply bg-citadel-green-dark bg-opacity-50 border border-citadel-green-light rounded-lg py-2 px-3 text-white;
+}
+
+.citadel-btn {
+  @apply bg-citadel-beige hover:bg-citadel-beige-light text-citadel-green-dark font-medium rounded-lg py-2 px-4 transition-colors duration-200;
+}
+
+.citadel-btn-small {
+  @apply bg-citadel-green-light hover:bg-citadel-green text-white text-sm font-medium rounded-lg py-1 px-2 transition-colors duration-200;
+}
+
+/* Keep your existing wallet adapter styles */
+.wallet-adapter-button-trigger {
+  background: rgb(100, 26, 230) !important;
+  border-radius: 8px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+.wallet-adapter-dropdown-list,
+.wallet-adapter-button {
+  font-family: inherit !important;
+}
