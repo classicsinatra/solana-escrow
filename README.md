@@ -1,4 +1,4 @@
-# counter
+# Solana OTC Escrow Swap
 
 ## Getting Started
 
