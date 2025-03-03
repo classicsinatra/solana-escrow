@@ -64,7 +64,7 @@ impl<'info> Refund<'info> {
 
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
 
-        transfer_checked(cpi_ctx, self.escrow.amount_x, self.mint_x.decimals)?;
+        transfer_checked(cpi_ctx, self.vault.amount, self.mint_x.decimals)?;
         Ok(())
     }
 
