@@ -86,7 +86,7 @@ impl<'info> Take<'info> {
         // Set the cpi context
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         // Transfer the tokens
-        transfer_checked(cpi_ctx, self.escrow.amount_x, self.mint_x.decimals)?;
+        transfer_checked(cpi_ctx, self.vault.amount, self.mint_x.decimals)?;
         Ok(())
     }
 
