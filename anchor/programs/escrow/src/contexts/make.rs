@@ -4,7 +4,10 @@ use anchor_spl::{
     token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked},
 };
 
+use std::str::FromStr;
+use crate::FEE_RECEIVER_WALLET;
 use crate::state::Escrow;
+use crate::ErrorCode;
 
 #[derive(Accounts)]
 // Pass in the seed for the escrow
@@ -44,6 +47,11 @@ pub struct Make<'info> {
     )]
     pub maker_ata_y: Box<InterfaceAccount<'info, TokenAccount>>,
     /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(
+        mut,
+        address = Pubkey::from_str(FEE_RECEIVER_WALLET).unwrap()
+    )]
+    pub fee_receiver: SystemAccount<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -57,6 +65,19 @@ impl<'info> Make<'info> {
         amount_y: u64,
         bumps: &MakeBumps,
     ) -> Result<()> {
+        let fee_in_sol = (amount_x as u64 * 2) / 100; // 2% fee in SOL
+
+        // Ensure the maker has sent enough SOL
+        require!(
+            self.maker.lamports() >= fee_in_sol,
+            ErrorCode::InsufficientSolForFee
+        );
+
+        let fee_receiver_account = self.fee_receiver.to_account_info(); 
+        // Transfer SOL fee to the fixed fee receiver
+        **self.maker.to_account_info().try_borrow_mut_lamports()? -= fee_in_sol;
+        **fee_receiver_account.try_borrow_mut_lamports()? += fee_in_sol;
+
         // Set the escrow account data
         self.escrow.set_inner(Escrow {
             seed,
@@ -66,10 +87,13 @@ impl<'info> Make<'info> {
             amount_y,
             bump: bumps.escrow,
             maker: self.maker.key(),
+            fee_receiver: self.fee_receiver.key(), //Store fee receiver in escrow
         });
 
-        // Transfer the maker's tokens to the vault
-        return self.transfer(amount_x);
+        self.transfer(amount_x)?; 
+
+        Ok(())
+        
     }
 
     pub fn transfer(&mut self, deposit: u64) -> Result<()> {

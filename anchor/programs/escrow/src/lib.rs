@@ -1,12 +1,13 @@
 use anchor_lang::prelude::*;
 
-declare_id!("Kod929S2N2nKGf1fpCWcCDfuiAV9y7Teu8MDauf3Fp3");
+declare_id!("C2ovmgfnHk8XFPbbyEDkwnxZVkZ7Sf8YG5k2cJwS3qDu");
 
 pub mod contexts;
 pub mod state;
 
 pub use contexts::*;
 
+pub const FEE_RECEIVER_WALLET: &str = "6uGf3oRwwt5wHC9q8NEs4ZGrh7nESRhKN4cKQioJGHfT"; 
 #[program]
 pub mod anchor_escrow {
     use super::*;
@@ -32,3 +33,9 @@ pub mod anchor_escrow {
 
 #[derive(Accounts)]
 pub struct Initialize {}
+
+#[error_code]
+pub enum ErrorCode {
+    #[msg("Not enough SOL to pay the 2% fee.")]
+    InsufficientSolForFee,
+}

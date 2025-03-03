@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/anchor_escrow.json`.
  */
 export type AnchorEscrow = {
-  "address": "Kod929S2N2nKGf1fpCWcCDfuiAV9y7Teu8MDauf3Fp3",
+  "address": "C2ovmgfnHk8XFPbbyEDkwnxZVkZ7Sf8YG5k2cJwS3qDu",
   "metadata": {
     "name": "anchorEscrow",
     "version": "0.1.0",
@@ -333,6 +333,11 @@ export type AnchorEscrow = {
               ]
             }
           }
+        },
+        {
+          "name": "feeReceiver",
+          "writable": true,
+          "address": "6uGf3oRwwt5wHC9q8NEs4ZGrh7nESRhKN4cKQioJGHfT"
         },
         {
           "name": "systemProgram",
@@ -1038,6 +1043,11 @@ export type AnchorEscrow = {
           }
         },
         {
+          "name": "feeReceiver",
+          "writable": true,
+          "address": "6uGf3oRwwt5wHC9q8NEs4ZGrh7nESRhKN4cKQioJGHfT"
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
@@ -1066,6 +1076,13 @@ export type AnchorEscrow = {
         218,
         155
       ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "insufficientSolForFee",
+      "msg": "Not enough SOL to pay the 2% fee."
     }
   ],
   "types": [
@@ -1101,6 +1118,10 @@ export type AnchorEscrow = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "feeReceiver",
+            "type": "pubkey"
           }
         ]
       }

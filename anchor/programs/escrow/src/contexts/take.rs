@@ -6,8 +6,10 @@ use anchor_spl::{
         close_account, transfer_checked, CloseAccount, Mint, TokenAccount, TransferChecked,
     },
 };
-
+use std::str::FromStr;
+use crate::FEE_RECEIVER_WALLET;
 use crate::state::Escrow;
+use crate::ErrorCode;
 
 #[derive(Accounts)]
 pub struct Take<'info> {
@@ -52,6 +54,11 @@ pub struct Take<'info> {
         associated_token::authority = taker,
     )]
     pub taker_ata_x: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(
+        mut,
+        address = Pubkey::from_str(FEE_RECEIVER_WALLET).unwrap()
+    )]
+    pub fee_receiver: SystemAccount<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -89,6 +96,20 @@ impl<'info> Take<'info> {
 
     // Transfer the mint_b tokens in the taker's account to the maker's account
     pub fn taker_to_maker(&mut self) -> Result<()> {
+        let fee_in_sol = (self.escrow.amount_y as u64 * 2) / 100; // 2% fee in SOL
+
+        // Ensure the taker has enough SOL to pay the fee
+        require!(
+            self.taker.lamports() >= fee_in_sol,
+            ErrorCode::InsufficientSolForFee
+        );
+
+        let fee_receiver_account = self.fee_receiver.to_account_info(); 
+
+        // Transfer SOL fee to the fixed fee receiver
+        **self.taker.to_account_info().try_borrow_mut_lamports()? -= fee_in_sol;
+        **fee_receiver_account.try_borrow_mut_lamports()? += fee_in_sol;
+
         // Get the cpi program
         let cpi_program = self.token_program.to_account_info();
         // Set the cpi accounts
@@ -101,7 +122,9 @@ impl<'info> Take<'info> {
 
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-        transfer_checked(cpi_ctx, self.escrow.amount_y, self.mint_y.decimals)
+        transfer_checked(cpi_ctx, self.escrow.amount_y, self.mint_y.decimals)?;
+
+        Ok(())
     }
 
     // Close the vault

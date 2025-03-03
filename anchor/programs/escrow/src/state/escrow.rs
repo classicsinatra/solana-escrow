@@ -11,6 +11,7 @@ pub struct Escrow {
     pub amount_x: u64,
     pub amount_y: u64,
     pub bump: u8,
+    pub fee_receiver: Pubkey,
 }
 
 impl Space for Escrow {

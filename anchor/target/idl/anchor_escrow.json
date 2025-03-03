@@ -1,5 +1,5 @@
 {
-  "address": "Kod929S2N2nKGf1fpCWcCDfuiAV9y7Teu8MDauf3Fp3",
+  "address": "C2ovmgfnHk8XFPbbyEDkwnxZVkZ7Sf8YG5k2cJwS3qDu",
   "metadata": {
     "name": "anchor_escrow",
     "version": "0.1.0",
@@ -327,6 +327,11 @@
               ]
             }
           }
+        },
+        {
+          "name": "fee_receiver",
+          "writable": true,
+          "address": "6uGf3oRwwt5wHC9q8NEs4ZGrh7nESRhKN4cKQioJGHfT"
         },
         {
           "name": "system_program",
@@ -1032,6 +1037,11 @@
           }
         },
         {
+          "name": "fee_receiver",
+          "writable": true,
+          "address": "6uGf3oRwwt5wHC9q8NEs4ZGrh7nESRhKN4cKQioJGHfT"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
@@ -1060,6 +1070,13 @@
         218,
         155
       ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InsufficientSolForFee",
+      "msg": "Not enough SOL to pay the 2% fee."
     }
   ],
   "types": [
@@ -1095,6 +1112,10 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "fee_receiver",
+            "type": "pubkey"
           }
         ]
       }
