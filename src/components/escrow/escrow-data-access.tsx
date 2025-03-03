@@ -51,10 +51,28 @@ export const TOKENS: Record<string, Token> = {
     symbol: "USDC",
     icon: "$"
   },
+  USDT: {
+    mint: new PublicKey("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
+    decimals: 6,
+    symbol: "USDT",
+    icon: "$"
+  },
   BONK: {
     mint: new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"),
     decimals: 5,
     symbol: "BONK",
+    icon: "$"
+  },
+  TRUMP: {
+    mint: new PublicKey("6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"),
+    decimals: 6,
+    symbol: "TRUMP",
+    icon: "$"
+  },
+  JITO: {
+    mint: new PublicKey("jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL"),
+    decimals: 9,
+    symbol: "JTO",
     icon: "$"
   },
   CITADAIL: {
