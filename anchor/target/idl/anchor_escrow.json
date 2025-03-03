@@ -1,5 +1,5 @@
 {
-  "address": "Kod929S2N2nKGf1fpCWcCDfuiAV9y7Teu8MDauf3Fp3",
+  "address": "C2ovmgfnHk8XFPbbyEDkwnxZVkZ7Sf8YG5k2cJwS3qDu",
   "metadata": {
     "name": "anchor_escrow",
     "version": "0.1.0",
@@ -327,6 +327,10 @@
               ]
             }
           }
+        },
+        {
+          "name": "fee_wallet_ata_x",
+          "writable": true
         },
         {
           "name": "system_program",
@@ -1032,6 +1036,10 @@
           }
         },
         {
+          "name": "fee_wallet_ata_y",
+          "writable": true
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
@@ -1060,6 +1068,18 @@
         218,
         155
       ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "FeeCalculationError",
+      "msg": "Fee calculation overflow"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidFeeWallet",
+      "msg": "Invalid fee wallet"
     }
   ],
   "types": [

@@ -10,6 +10,7 @@ import {
   PublicKey,
   RpcResponseAndContext,
   SystemProgram,
+  Transaction,
 } from "@solana/web3.js";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
@@ -23,6 +24,7 @@ import {
   getAssociatedTokenAddress,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
 import { create, mplCore } from "@metaplex-foundation/mpl-core";
@@ -39,6 +41,8 @@ export type Token = {
   symbol: string,
   icon: string
 }
+
+export const FEE_WALLET_ADDRESS = new PublicKey("6uGf3oRwwt5wHC9q8NEs4ZGrh7nESRhKN4cKQioJGHfT");
 
 export const TOKENS: Record<string, Token> = {
   USDC: {
@@ -252,6 +256,37 @@ export function useEscrowProgram() {
       );
       const vault = await getAssociatedTokenAddress(mintX, escrow, true);
 
+      // Create fee wallet ATA for token X
+      const feeWalletAtaX = await getAssociatedTokenAddress(
+        mintX,
+        FEE_WALLET_ADDRESS,
+        false
+      );
+
+      try{
+        // Check if the fee wallet ATA already exists
+        const feeWalletAtaInfo = await connection.getAccountInfo(feeWalletAtaX);
+      
+        // If it doesn't exist, create it first
+        if (!feeWalletAtaInfo) {
+          console.log("Creating fee wallet ATA for token X...");
+          const createAtaIx = createAssociatedTokenAccountInstruction(
+            provider.publicKey, // payer
+            feeWalletAtaX, // ata account
+            FEE_WALLET_ADDRESS, // owner
+            mintX // mint
+          );
+        
+          // Send and confirm the transaction
+          const createAtaTx = new Transaction().add(createAtaIx);
+          await provider.sendAndConfirm(createAtaTx);
+          console.log("Fee wallet ATA created successfully!");
+        }
+      } catch (err) {
+        console.error("Error checking/creating fee wallet ATA:", err);
+        // Continue anyway, as the error might just be that the account already exists
+      }
+
       const context = {
         maker: provider.publicKey,
         mintX: mintX,
@@ -260,6 +295,7 @@ export function useEscrowProgram() {
         makerAtaY,
         escrow,
         vault,
+        feeWalletAtaX,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -277,6 +313,7 @@ export function useEscrowProgram() {
         .make(seed, deposit, receive)
         .accountsStrict(context)
         .rpc({});
+
       // Return the signature and the escrow address
       return {
         signature: tx,
@@ -405,6 +442,36 @@ export function useEscrowProgramAccount({ account }: { account: PublicKey }) {
         accountQuery.data?.mintY,
         accountQuery.data?.maker
       );
+      // Create fee wallet ATA for token Y
+      const feeWalletAtaY = await getAssociatedTokenAddress(
+        accountQuery.data?.mintY,
+        FEE_WALLET_ADDRESS,
+        false
+      );
+
+      try {
+        const feeWalletAtaInfo = await connection.getAccountInfo(feeWalletAtaY);
+        
+        // If it doesn't exist, create it first
+        if (!feeWalletAtaInfo) {
+          console.log("Creating fee wallet ATA for token Y...");
+          const createAtaIx = createAssociatedTokenAccountInstruction(
+            provider.publicKey, // payer
+            feeWalletAtaY, // ata account
+            FEE_WALLET_ADDRESS, // owner
+            accountQuery.data?.mintY // mint
+          );
+          
+          // Send and confirm the transaction
+          const createAtaTx = new Transaction().add(createAtaIx);
+          await provider.sendAndConfirm(createAtaTx);
+          console.log("Fee wallet ATA for Y token created successfully!");
+        }
+      } catch (err) {
+        console.error("Error checking/creating fee wallet ATA:", err);
+        // Continue anyway, as the error might just be that the account already exists
+      }
+
       // Define the context
       const context = {
         maker: accountQuery.data?.maker,
@@ -416,16 +483,20 @@ export function useEscrowProgramAccount({ account }: { account: PublicKey }) {
         makerAtaY,
         vault,
         escrow: account,
+        feeWalletAtaY,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       };
+
       // Log the context
       Object.entries(context).forEach(([key, value]) => {
         console.log(key, value.toString());
       });
+
       // Take the escrow
       const tx = await program.methods.take().accountsStrict(context).rpc();
+
       // Return the signature
       return {
         signature: tx,

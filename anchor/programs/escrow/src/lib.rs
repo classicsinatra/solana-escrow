@@ -1,6 +1,17 @@
 use anchor_lang::prelude::*;
 
-declare_id!("Kod929S2N2nKGf1fpCWcCDfuiAV9y7Teu8MDauf3Fp3");
+declare_id!("C2ovmgfnHk8XFPbbyEDkwnxZVkZ7Sf8YG5k2cJwS3qDu");
+
+pub const FEE_WALLET_ADDRESS: &str = "6uGf3oRwwt5wHC9q8NEs4ZGrh7nESRhKN4cKQioJGHfT";
+
+// Add error types for fee handling
+#[error_code]
+pub enum EscrowError {
+    #[msg("Fee calculation overflow")]
+    FeeCalculationError,
+    #[msg("Invalid fee wallet")]
+    InvalidFeeWallet,
+}
 
 pub mod contexts;
 pub mod state;

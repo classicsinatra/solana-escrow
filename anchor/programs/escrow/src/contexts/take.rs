@@ -7,7 +7,7 @@ use anchor_spl::{
     },
 };
 
-use crate::state::Escrow;
+use crate::{state::Escrow};
 
 #[derive(Accounts)]
 pub struct Take<'info> {
@@ -52,6 +52,9 @@ pub struct Take<'info> {
         associated_token::authority = taker,
     )]
     pub taker_ata_x: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(mut)]
+    /// CHECK: This is the fee wallet ATA
+    pub fee_wallet_ata_y: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -89,19 +92,37 @@ impl<'info> Take<'info> {
 
     // Transfer the mint_b tokens in the taker's account to the maker's account
     pub fn taker_to_maker(&mut self) -> Result<()> {
+        // Calculate the fee and amount after fee
+        let total_amount = self.escrow.amount_y;
+        let fee_amount = Escrow::calculate_fee(total_amount);
+        let amount_to_maker = Escrow::amount_after_fee(total_amount);
+
         // Get the cpi program
         let cpi_program = self.token_program.to_account_info();
+
         // Set the cpi accounts
-        let cpi_accounts = TransferChecked {
+        let maker_cpi_accounts = TransferChecked {
             from: self.taker_ata_y.to_account_info(),
             to: self.maker_ata_y.to_account_info(),
             authority: self.taker.to_account_info(),
             mint: self.mint_y.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-
-        transfer_checked(cpi_ctx, self.escrow.amount_y, self.mint_y.decimals)
+        let maker_cpi_ctx = CpiContext::new(cpi_program.clone(), maker_cpi_accounts);
+        transfer_checked(maker_cpi_ctx, amount_to_maker, self.mint_y.decimals)?;
+        
+        // Then transfer fee to fee wallet
+        let fee_cpi_accounts = TransferChecked {
+            from: self.taker_ata_y.to_account_info(),
+            to: self.fee_wallet_ata_y.to_account_info(),
+            authority: self.taker.to_account_info(),
+            mint: self.mint_y.to_account_info(),
+        };
+        
+        let fee_cpi_ctx = CpiContext::new(cpi_program, fee_cpi_accounts);
+        transfer_checked(fee_cpi_ctx, fee_amount, self.mint_y.decimals)?;
+        
+        Ok(())
     }
 
     // Close the vault

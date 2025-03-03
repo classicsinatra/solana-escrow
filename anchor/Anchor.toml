@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.mainnet]
-escrow = "Kod929S2N2nKGf1fpCWcCDfuiAV9y7Teu8MDauf3Fp3"
+escrow = "C2ovmgfnHk8XFPbbyEDkwnxZVkZ7Sf8YG5k2cJwS3qDu"
 
 [registry]
 url = "https://api.apr.dev"

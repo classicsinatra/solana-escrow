@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/anchor_escrow.json`.
  */
 export type AnchorEscrow = {
-  "address": "Kod929S2N2nKGf1fpCWcCDfuiAV9y7Teu8MDauf3Fp3",
+  "address": "C2ovmgfnHk8XFPbbyEDkwnxZVkZ7Sf8YG5k2cJwS3qDu",
   "metadata": {
     "name": "anchorEscrow",
     "version": "0.1.0",
@@ -333,6 +333,10 @@ export type AnchorEscrow = {
               ]
             }
           }
+        },
+        {
+          "name": "feeWalletAtaX",
+          "writable": true
         },
         {
           "name": "systemProgram",
@@ -1038,6 +1042,10 @@ export type AnchorEscrow = {
           }
         },
         {
+          "name": "feeWalletAtaY",
+          "writable": true
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
@@ -1066,6 +1074,18 @@ export type AnchorEscrow = {
         218,
         155
       ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "feeCalculationError",
+      "msg": "Fee calculation overflow"
+    },
+    {
+      "code": 6001,
+      "name": "invalidFeeWallet",
+      "msg": "Invalid fee wallet"
     }
   ],
   "types": [
