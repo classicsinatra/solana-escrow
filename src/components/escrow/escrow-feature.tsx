@@ -16,7 +16,7 @@ export default function EscrowFeature() {
   // If the user is connected, show the escrow feature
   // Else, show the connect wallet button
   return publicKey ? (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <div className="mb-8 text-center">
         <h1 className="text-4xl font-bold text-white mb-2"></h1>
         <p className="text-gray-200 mb-2"></p>
@@ -28,49 +28,9 @@ export default function EscrowFeature() {
         </p>
       </div>
       
-      <div className="grid md:grid-cols-7 gap-6">
-        <div className="md:col-span-4">
-          {/* Create an escrow */}
-          <OTCEscrowCreate />
-        </div>
-        <div className="md:col-span-3">
-          {/* Trade Progress */}
-          <div className="citadel-card p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Trade Progress</h2>
-            <div className="space-y-4">
-              <div className="flex items-center text-white">
-                <div className="w-6 h-6 rounded-full border-2 border-citadel-beige flex items-center justify-center mr-3">
-                  <div className="w-3 h-3 rounded-full bg-citadel-beige"></div>
-                </div>
-                <span>Trade request submitted</span>
-              </div>
-              
-              <div className="flex items-center text-white opacity-50">
-                <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center mr-3">
-                </div>
-                <span>Funds transferred from your wallet to escrow</span>
-              </div>
-              
-              <div className="flex items-center text-white opacity-50">
-                <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center mr-3">
-                </div>
-                <span>Second party confirmed the trade</span>
-              </div>
-              
-              <div className="flex items-center text-white opacity-50">
-                <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center mr-3">
-                </div>
-                <span>Funds transferred from second party wallet to escrow</span>
-              </div>
-              
-              <div className="flex items-center text-white opacity-50">
-                <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center mr-3">
-                </div>
-                <span>Funds transferred from escrow to your wallet</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Create fixed-width container for OTCEscrowCreate */}
+      <div style={{ maxWidth: '680px', width: '100%' }} className="mx-auto">
+        <OTCEscrowCreate />
       </div>
       
       {/* List all escrows - Only show if there are escrows */}

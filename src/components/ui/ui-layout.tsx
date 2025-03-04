@@ -10,7 +10,13 @@ import {AccountChecker} from '../account/account-ui'
 import {ClusterChecker, ExplorerLink} from '../cluster/cluster-ui'
 import {WalletButton} from '../solana/solana-provider'
 
-export function UiLayout({ children }: { children: ReactNode }) {
+export function UiLayout({ 
+  children, 
+  navLinks 
+}: { 
+  children: ReactNode;
+  navLinks: { label: string; path: string; }[];
+}) {
   const pathname = usePathname()
 
   // Define the links we want to show in the navbar
@@ -23,9 +29,9 @@ export function UiLayout({ children }: { children: ReactNode }) {
     <div className="h-full flex flex-col">
       <div className="navbar bg-base-300 text-neutral-content flex-col md:flex-row space-y-2 md:space-y-0">
         <div className="flex-1">
-          <Link className="btn btn-ghost normal-case text-xl" href="/">
-            <img className="h-4 md:h-6" alt="Logo" src="/citadail.png" />
-          </Link>
+          <Link className="btn btn-ghost normal-case text-xl h-auto" href="/">
+            <img className="h-8 md:h-10" alt="Logo" src="/CITADAIL-LOGO-horizontal.png" />
+            </Link>
           <ul className="menu menu-horizontal px-1 space-x-2">
             {links.map(({ label, path }) => (
               <li key={path}>

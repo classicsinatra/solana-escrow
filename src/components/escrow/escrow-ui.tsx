@@ -7,40 +7,41 @@ import { ExplorerLink } from "@/components/cluster/cluster-ui";
 import {
   useEscrowProgram,
   useEscrowProgramAccount,
-  TOKENS
+  TOKENS,
 } from "./escrow-data-access";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
+import { showTradeNotification, TradeStage } from "./trade-notification";
+import toast from "react-hot-toast";
 
 export function OTCEscrowCreate() {
-  const { initializeOrder } = useEscrowProgram()
-  const { publicKey } = useWallet()
+  const { initializeOrder } = useEscrowProgram();
+  const { publicKey } = useWallet();
   const [selectedTokens, setSelectedTokens] = useState<{
     selling: keyof typeof TOKENS;
     buying: keyof typeof TOKENS;
   }>({
-    selling: 'USDC',
-    buying: 'CITADAIL'
+    selling: "USDC",
+    buying: "CITADAIL",
   });
 
   const [amounts, setAmounts] = useState({
-    selling: '',
-    buying: ''
-  })
+    selling: "",
+    buying: "",
+  });
 
   const [showPopup, setShowPopup] = useState(false);
   const [createdEscrow, setCreatedEscrow] = useState<string | null>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
 
   const handleCreateOrder = async () => {
-    if (!publicKey) return
+    if (!publicKey) return;
 
     try {
       const mintX = TOKENS[selectedTokens.selling].mint;
-
       const mintY = TOKENS[selectedTokens.buying].mint;
 
-      console.log('Creating order with:', {
+      console.log("Creating order with:", {
         maker: publicKey.toString(),
         mintX: mintX.toString(),
         mintY: mintY.toString(),
@@ -48,52 +49,70 @@ export function OTCEscrowCreate() {
         mintYAmount: Number(amounts.buying),
       });
 
+      // Show initial notification
+      toast.loading("Creating trade...", { id: "create-trade" });
+
       const result = await initializeOrder.mutateAsync({
         maker: publicKey,
         mintX,
-        mintXAmount: Number(amounts.selling) * Math.pow(10, TOKENS[selectedTokens.selling].decimals),
-        mintYAmount: Number(amounts.buying) * Math.pow(10, TOKENS[selectedTokens.buying].decimals),
+        mintXAmount:
+          Number(amounts.selling) *
+          Math.pow(10, TOKENS[selectedTokens.selling].decimals),
+        mintYAmount:
+          Number(amounts.buying) *
+          Math.pow(10, TOKENS[selectedTokens.buying].decimals),
         mintY,
       });
+
+      // Dismiss the loading toast
+      toast.dismiss("create-trade");
 
       // Store the escrow public key and show the popup
       if (result && result.escrow) {
         const escrowPublicKey = result.escrow.toString();
         setCreatedEscrow(escrowPublicKey);
         setShowPopup(true);
-      }
 
+        // Show success notifications
+        showTradeNotification(TradeStage.REQUESTED, true);
+        setTimeout(() => {
+          showTradeNotification(TradeStage.FUNDS_IN_ESCROW, true);
+        }, 1000);
+      }
     } catch (error) {
-      console.error('Failed to create order:', error);
+      // Dismiss the loading toast
+      toast.dismiss("create-trade");
+      console.error("Failed to create order:", error);
+      toast.error("Failed to create order. Please try again.");
     }
   };
 
-  const handleHalfAmount = (type: 'selling' | 'buying') => {
+  const handleHalfAmount = (type: "selling" | "buying") => {
     // This is a placeholder - in a real app you'd calculate based on wallet balance
     const currentAmount = parseFloat(amounts[type]) || 0;
-    setAmounts(prev => ({
+    setAmounts((prev) => ({
       ...prev,
-      [type]: (currentAmount / 2).toString()
+      [type]: (currentAmount / 2).toString(),
     }));
   };
 
-  const handleMaxAmount = (type: 'selling' | 'buying') => {
+  const handleMaxAmount = (type: "selling" | "buying") => {
     // This is a placeholder - in a real app you'd get this from wallet balance
-    const maxAmount = type === 'selling' ? '100' : '1000'; 
-    setAmounts(prev => ({
+    const maxAmount = type === "selling" ? "100" : "1000";
+    setAmounts((prev) => ({
       ...prev,
-      [type]: maxAmount
+      [type]: maxAmount,
     }));
   };
 
   const swapTokens = () => {
     setSelectedTokens({
       selling: selectedTokens.buying,
-      buying: selectedTokens.selling
+      buying: selectedTokens.selling,
     });
     setAmounts({
       selling: amounts.buying,
-      buying: amounts.selling
+      buying: amounts.selling,
     });
   };
 
@@ -106,34 +125,38 @@ export function OTCEscrowCreate() {
   };
 
   // Generate the share URL
-  const shareUrl = typeof window !== 'undefined' && createdEscrow 
-    ? `${window.location.origin}/escrow/${createdEscrow}`
-    : '';
+  const shareUrl =
+    typeof window !== "undefined" && createdEscrow
+      ? `${window.location.origin}/escrow/${createdEscrow}`
+      : "";
 
   return (
-    <div className="citadel-card p-6 mx-auto max-w-2xl">
-      <h2 className="text-2xl font-bold text-center text-white mb-6">Create Trade</h2>
-      
+    <div className="citadel-card p-6" style={{ width: '680px', maxWidth: '100%' }}>
+      <h2 className="text-2xl font-bold text-center text-white mb-6">
+        Create Trade
+      </h2>
+
       {/* Selling Section */}
       <div className="mb-6">
-        <label className="block text-white text-lg mb-2">
-          Selling
-        </label>
+        <label className="block text-white text-lg mb-2">Selling</label>
         <div className="flex gap-2 mb-2">
           <div className="relative flex-1">
-            <select 
+            <select
               className="citadel-input w-full appearance-none pl-10"
               value={selectedTokens.selling}
               onChange={(e) => {
-                const newValue = e.target.value
+                const newValue = e.target.value;
                 // Prevent selecting same token for both sides
                 if (newValue === selectedTokens.buying) {
                   setSelectedTokens({
                     selling: newValue,
-                    buying: selectedTokens.selling
-                  })
+                    buying: selectedTokens.selling,
+                  });
                 } else {
-                  setSelectedTokens(prev => ({...prev, selling: newValue as keyof typeof TOKENS}))
+                  setSelectedTokens((prev) => ({
+                    ...prev,
+                    selling: newValue as keyof typeof TOKENS,
+                  }));
                 }
               }}
             >
@@ -153,18 +176,20 @@ export function OTCEscrowCreate() {
               placeholder="Amount"
               className="citadel-input w-full"
               value={amounts.selling}
-              onChange={(e) => setAmounts(prev => ({...prev, selling: e.target.value}))}
+              onChange={(e) =>
+                setAmounts((prev) => ({ ...prev, selling: e.target.value }))
+              }
             />
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
-              <button 
+              <button
                 className="citadel-btn-small"
-                onClick={() => handleHalfAmount('selling')}
+                onClick={() => handleHalfAmount("selling")}
               >
                 HALF
               </button>
-              <button 
+              <button
                 className="citadel-btn-small"
-                onClick={() => handleMaxAmount('selling')}
+                onClick={() => handleMaxAmount("selling")}
               >
                 MAX
               </button>
@@ -175,36 +200,48 @@ export function OTCEscrowCreate() {
 
       {/* Swap Button */}
       <div className="flex justify-center my-4">
-        <button 
+        <button
           className="p-2 bg-citadel-green-light rounded-full hover:bg-citadel-green-dark transition-colors"
           onClick={swapTokens}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+            />
           </svg>
         </button>
       </div>
 
       {/* Buying Section */}
       <div className="mb-6">
-        <label className="block text-white text-lg mb-2">
-          Buying
-        </label>
+        <label className="block text-white text-lg mb-2">Buying</label>
         <div className="flex gap-2 mb-2">
           <div className="relative flex-1">
-            <select 
+            <select
               className="citadel-input w-full appearance-none pl-10"
               value={selectedTokens.buying}
               onChange={(e) => {
-                const newValue = e.target.value
+                const newValue = e.target.value;
                 // Prevent selecting same token for both sides
                 if (newValue === selectedTokens.selling) {
                   setSelectedTokens({
                     buying: newValue,
-                    selling: selectedTokens.buying
-                  })
+                    selling: selectedTokens.buying,
+                  });
                 } else {
-                  setSelectedTokens(prev => ({...prev, buying: newValue as keyof typeof TOKENS}))
+                  setSelectedTokens((prev) => ({
+                    ...prev,
+                    buying: newValue as keyof typeof TOKENS,
+                  }));
                 }
               }}
             >
@@ -224,18 +261,20 @@ export function OTCEscrowCreate() {
               placeholder="Amount"
               className="citadel-input w-full"
               value={amounts.buying}
-              onChange={(e) => setAmounts(prev => ({...prev, buying: e.target.value}))}
+              onChange={(e) =>
+                setAmounts((prev) => ({ ...prev, buying: e.target.value }))
+              }
             />
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
-              <button 
+              <button
                 className="citadel-btn-small"
-                onClick={() => handleHalfAmount('buying')}
+                onClick={() => handleHalfAmount("buying")}
               >
                 HALF
               </button>
-              <button 
+              <button
                 className="citadel-btn-small"
-                onClick={() => handleMaxAmount('buying')}
+                onClick={() => handleMaxAmount("buying")}
               >
                 MAX
               </button>
@@ -245,10 +284,12 @@ export function OTCEscrowCreate() {
       </div>
 
       <div className="flex justify-center mt-6">
-        <button 
+        <button
           className="citadel-btn w-full py-3 text-lg font-bold"
           onClick={handleCreateOrder}
-          disabled={!amounts.selling || !amounts.buying || initializeOrder.isPending}
+          disabled={
+            !amounts.selling || !amounts.buying || initializeOrder.isPending
+          }
         >
           {initializeOrder.isPending ? (
             <>
@@ -256,7 +297,7 @@ export function OTCEscrowCreate() {
               Creating...
             </>
           ) : (
-            'Create Trade'
+            "Create Trade"
           )}
         </button>
       </div>
@@ -265,9 +306,13 @@ export function OTCEscrowCreate() {
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="citadel-card p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4 text-white">Trade Created Successfully!</h3>
-            <p className="mb-4 text-white">Copy this URL and share it with your desired OTC counterparty:</p>
-            
+            <h3 className="text-xl font-bold mb-4 text-white">
+              Trade Created Successfully!
+            </h3>
+            <p className="mb-4 text-white">
+              Copy this URL and share it with your desired OTC counterparty:
+            </p>
+
             <div className="flex mb-4">
               <input
                 ref={urlInputRef}
@@ -276,16 +321,13 @@ export function OTCEscrowCreate() {
                 value={shareUrl}
                 readOnly
               />
-              <button 
-                className="citadel-btn ml-2" 
-                onClick={copyToClipboard}
-              >
+              <button className="citadel-btn ml-2" onClick={copyToClipboard}>
                 Copy
               </button>
             </div>
-            
+
             <div className="flex justify-end">
-              <button 
+              <button
                 className="citadel-btn"
                 onClick={() => setShowPopup(false)}
               >
@@ -340,9 +382,7 @@ export function EscrowList() {
   if (!getProgramAccount.data?.value) {
     return (
       <div className="alert alert-info flex justify-center">
-        <span>
-          ........
-        </span>
+        <span>........</span>
       </div>
     );
   }
@@ -363,7 +403,6 @@ export function EscrowList() {
       ) : (
         <div className="text-center">
           <h2 className={"text-2xl"}></h2>
-          
         </div>
       )}
     </div>
@@ -390,7 +429,7 @@ export function EscrowCard({ account }: { account: PublicKey }) {
         return {
           tokenSymbol,
           decimals: tokenData.decimals,
-          icon: tokenData.icon
+          icon: tokenData.icon,
         };
       }
     }
@@ -411,7 +450,8 @@ export function EscrowCard({ account }: { account: PublicKey }) {
 
   // Format amounts with proper decimals
   const formattedVaultAmount = useMemo(() => {
-    if (!vaultQuery.data?.value?.data?.parsed?.info?.tokenAmount?.uiAmount) return "...";
+    if (!vaultQuery.data?.value?.data?.parsed?.info?.tokenAmount?.uiAmount)
+      return "...";
     const amount = vaultQuery.data.value.data.parsed.info.tokenAmount.uiAmount;
     return amount.toString();
   }, [vaultQuery.data?.value?.data?.parsed?.info?.tokenAmount?.uiAmount]);
@@ -419,7 +459,9 @@ export function EscrowCard({ account }: { account: PublicKey }) {
   const formattedReceiveAmount = useMemo(() => {
     if (!accountQuery.data?.amountY || !tokenY) return "...";
     // Convert from raw amount to decimal amount
-    const amount = Number(accountQuery.data.amountY.toString()) / Math.pow(10, tokenY.decimals);
+    const amount =
+      Number(accountQuery.data.amountY.toString()) /
+      Math.pow(10, tokenY.decimals);
     return amount.toString();
   }, [accountQuery.data?.amountY, tokenY]);
 
@@ -427,7 +469,7 @@ export function EscrowCard({ account }: { account: PublicKey }) {
   if (accountQuery.isLoading) {
     return <span className="loading loading-spinner loading-lg"></span>;
   }
-  
+
   // If the escrow account is not loading, show the escrow card
   return (
     <div className="citadel-card text-white overflow-hidden">
@@ -438,21 +480,25 @@ export function EscrowCard({ account }: { account: PublicKey }) {
             <h3 className="text-xl font-medium mb-3">
               <span className="text-gray-300">Maker:</span> {ellipsify(maker)}
             </h3>
-            
+
             <div className="citadel-card bg-opacity-30 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-300">You Receive:</span>
-                <span className="text-lg font-semibold">{formattedVaultAmount} {tokenX ? tokenX.tokenSymbol : "..."}</span>
+                <span className="text-lg font-semibold">
+                  {formattedVaultAmount} {tokenX ? tokenX.tokenSymbol : "..."}
+                </span>
               </div>
             </div>
-            
+
             <div className="citadel-card bg-opacity-30 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-300">They Receive:</span>
-                <span className="text-lg font-semibold">{formattedReceiveAmount} {tokenY ? tokenY.tokenSymbol : "..."}</span>
+                <span className="text-lg font-semibold">
+                  {formattedReceiveAmount} {tokenY ? tokenY.tokenSymbol : "..."}
+                </span>
               </div>
             </div>
-            
+
             <p className="text-sm text-gray-300">
               <ExplorerLink
                 path={`account/${account}`}
@@ -461,12 +507,43 @@ export function EscrowCard({ account }: { account: PublicKey }) {
               />
             </p>
           </div>
-          
+
           {/* Right side: Buttons */}
           <div className="flex flex-col justify-center gap-3 min-w-[120px]">
             <button
               className="citadel-btn"
-              onClick={() => takeMutation.mutateAsync()}
+              onClick={async () => {
+                try {
+                  // Show loading toast
+                  toast.loading("Processing trade...", { id: "take-trade" });
+
+                  // Execute the transaction
+                  await takeMutation.mutateAsync();
+
+                  // Dismiss loading toast
+                  toast.dismiss("take-trade");
+
+                  // Show success notifications with a slight delay between them
+                  showTradeNotification(
+                    TradeStage.SECOND_PARTY_CONFIRMED,
+                    false
+                  );
+                  setTimeout(() => {
+                    showTradeNotification(
+                      TradeStage.TAKER_FUNDS_TRANSFERRED,
+                      false
+                    );
+                  }, 1000);
+                  setTimeout(() => {
+                    showTradeNotification(TradeStage.COMPLETED, false);
+                  }, 2000);
+                } catch (error) {
+                  // Dismiss loading toast
+                  toast.dismiss("take-trade");
+                  console.error("Error taking trade:", error);
+                  toast.error("Failed to complete trade. Please try again.");
+                }
+              }}
               disabled={takeMutation.isPending}
             >
               {takeMutation.isPending ? (
@@ -475,14 +552,35 @@ export function EscrowCard({ account }: { account: PublicKey }) {
                   Processing...
                 </>
               ) : (
-                'Take Trade'
+                "Take Trade"
               )}
             </button>
-            
+
             {accountQuery.data?.maker.toString() === publicKey?.toString() && (
               <button
                 className="border border-citadel-beige text-citadel-beige hover:bg-citadel-beige hover:bg-opacity-10 rounded-lg py-2 px-4 transition-colors"
-                onClick={() => refundMutation.mutateAsync()}
+                onClick={async () => {
+                  try {
+                    // Show loading toast
+                    toast.loading("Cancelling trade...", {
+                      id: "cancel-trade",
+                    });
+
+                    // Execute the transaction
+                    await refundMutation.mutateAsync();
+
+                    // Dismiss loading toast
+                    toast.dismiss("cancel-trade");
+
+                    // Show cancelled notification
+                    showTradeNotification(TradeStage.CANCELLED, true);
+                  } catch (error) {
+                    // Dismiss loading toast
+                    toast.dismiss("cancel-trade");
+                    console.error("Error cancelling trade:", error);
+                    toast.error("Failed to cancel trade. Please try again.");
+                  }
+                }}
                 disabled={refundMutation.isPending}
               >
                 {refundMutation.isPending ? (
@@ -491,7 +589,7 @@ export function EscrowCard({ account }: { account: PublicKey }) {
                     Processing...
                   </>
                 ) : (
-                  'Cancel Trade'
+                  "Cancel Trade"
                 )}
               </button>
             )}

@@ -28,7 +28,7 @@ export default function RootLayout({
           <TRPCReactProvider>
             <ClusterProvider>
               <SolanaProvider>
-                <UiLayout links={links}>{children}</UiLayout>
+                <UiLayout navLinks={links}>{children}</UiLayout>
               </SolanaProvider>
             </ClusterProvider>
           </TRPCReactProvider>
