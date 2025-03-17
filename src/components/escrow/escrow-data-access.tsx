@@ -179,6 +179,7 @@ export function useEscrowProgram() {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
+        feeWalletAtaX: FEE_WALLET_ADDRESS,
       };
       // Log the context
       Object.entries(context).forEach(([key, value]) => {
