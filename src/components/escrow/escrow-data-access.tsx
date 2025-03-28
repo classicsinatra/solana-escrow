@@ -63,6 +63,12 @@ export const TOKENS: Record<string, Token> = {
     symbol: "BONK",
     icon: "$"
   },
+  LATE: {
+    mint: new PublicKey("bv88GZQfPHeTXHctPPxkbFCAKBCocXFSENYGYBppump"),
+    decimals: 6,
+    symbol: "LATE",
+    icon: "$"
+  },
   TRUMP: {
     mint: new PublicKey("6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"),
     decimals: 6,
